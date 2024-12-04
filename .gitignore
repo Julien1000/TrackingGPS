@@ -1,0 +1,19 @@
+# Ignorer les fichiers de sensibles
+.env
+
+# Ignorer les répertoires générés automatiquement
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorer les fichiers de l'environnement virtuel Python
+env/
+venv/
+
+# Ignorer les fichiers générés par votre éditeur de code
+.vscode/
+.idea/
+
+# Ignorer les fichiers et répertoires temporaires du système
+.DS_Store
+Thumbs.db
