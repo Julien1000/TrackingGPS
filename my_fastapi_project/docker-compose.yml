@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  db:
+    build: .
+    image: my_postgres_image
+    container_name: my_postgres_container
+    ports:
+      - "5432:5432"  # Expose le port 5432 pour accéder à la base de données depuis l'extérieur
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=coord
+    volumes:
+      - ./data/db:/var/lib/postgresql/data  # Volume pour persister les données de la base de données
+      - ../db/initialisation.sql:/docker-entrypoint-initdb.d/initialisation.sql  # Volume pour le fichier d'initialisation
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge

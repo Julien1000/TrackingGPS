@@ -1,0 +1,11 @@
+lancer fastapi:
+fastapi dev my_fastapi_project/app/main.py
+
+http://127.0.0.1:8000/docs
+
+nom: ekip
+mdp postgresql: projet1
+
+Se connecter: sudo -i -u postgres
+
+source env/bin/activate
