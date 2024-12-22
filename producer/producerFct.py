@@ -40,3 +40,4 @@ def envoyer_message(producer, topic, message):
         print(f"Message envoyé avec succès : {message}")
     except Exception as e:
         print(f"Erreur lors de l'envoi du message : {e}")
+
