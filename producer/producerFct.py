@@ -15,7 +15,6 @@ def create_producer():
     broker = os.getenv('KAFKA_BROKER')  # Charger l'adresse du broker depuis les variables d'environnement
     if not broker:
         raise ValueError("L'environnement 'KAFKA_BROKER' n'est pas configuré.")
-    
     try:
         producer = KafkaProducer(
             bootstrap_servers=broker,
