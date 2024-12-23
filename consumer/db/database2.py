@@ -1,8 +1,14 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = "postgresql+asyncpg://ekip:projet1@localhost/coord_gps"
-# Configuration du moteur
+DB_USER = os.getenv('POSTGRES_USER')
+DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+DB_HOST = "db"
+DB_NAME = "coord_gps"
+
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+# Configuration du moteur.
 engine = create_async_engine(DATABASE_URL, echo=True)
 
 # Fabrique de session

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15  # Utilisation de l'image PostgreSQL classique
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: coord_gps
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/initialisation.sql:/docker-entrypoint-initdb.d/initialisation.sql  # Chargement du fichier SQL
+      - postgres_data:/var/lib/postgresql/data  # Volume pour la persistance des données
+    networks:
+      - app_network
+    restart: always
+
+  fastapi:
+    build: .
+    container_name: fastapi
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/coord_gps  # Connexion à PostgreSQL
+      
+    env_file: 
+      - .env  # Charge les variables depuis le fichier .env
+    networks:
+      - app_network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
