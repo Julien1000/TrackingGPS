@@ -1,20 +1,9 @@
 from kafka import KafkaConsumer
+import os
 import json
-import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert
-from db.database2 import get_db
-from db.model2 import Base, User, Coord
-from db.schema import CoordBase, CoordResponse, CoordCreate
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.future import select
 
+from main import add_coord_internally, broadcast_to_websockets
 
-# Configuration PostgreSQL
-DB_HOST = "localhost"
-DB_USER = "postgres"
-DB_PASSWORD = "password"
-DB_NAME = "gps_data"
 
 def create_consumer(topic_name, bootstrap_servers, group_id):
     """
@@ -40,49 +29,41 @@ def create_consumer(topic_name, bootstrap_servers, group_id):
         print(f"Erreur lors de la création du consumer: {e}")
         return None
 
-async def read_messages(consumer, websocket_broadcast, db_session: AsyncSession):
+async def read_messages(consumer):
     """
-    Lit les messages depuis Kafka, vérifie l'utilisateur, insère les coordonnées et diffuse via WebSocket.
+    Lit les messages depuis un Kafka Consumer.
+
     :param consumer: Instance de KafkaConsumer.
-    :param websocket_broadcast: Fonction pour diffuser les messages via WebSocket.
-    :param db_session: Instance de AsyncSession pour interagir avec la base.
     """
     try:
+        # Boucle pour lire les messages
         for message in consumer:
-            # Décoder et parser le message
+            print(f"Message reçu: {message.value.decode('utf-8')} | Partition: {message.partition} | Offset: {message.offset}")
+
+
             message_str = message.value.decode('utf-8')
             message_json = json.loads(message_str)
-
-            nom = message_json.get('nom')
+            # Extraire les champs nécessaires
+            user_id = message_json.get('user_id')
             latitude = message_json.get('latitude')
             longitude = message_json.get('longitude')
-            date1 = message_json.get('date1')  # Format de date inclus
+            date = message_json.get('date')
 
-            # Vérifiez si l'utilisateur existe
-            result = await db_session.execute(select(User).filter(User.nom == nom))
-            user = result.scalars().first()
-            if not user:
-                user = User(nom=nom)
-                db_session.add(user)
 
-            # Ajouter les coordonnées
-            new_coord = Coord(
-                nom=nom,
-                latitude=latitude,
-                longitude=longitude,
-                date1=date1
-            )
-            db_session.add(new_coord)
+            message_json = {
+                "nom": user_id,  # Associez "user_id" à "nom" attendu par CoordCreate
+                "latitude": latitude,
+                "longitude": longitude,
+                "date1": date  # Date au format ISO 8601
+            }
 
-            try:
-                # Sauvegarder dans la base
-                await db_session.commit()
-                await db_session.refresh(new_coord)
+            # Ajout à la base de données
+            await add_coord_internally(message_json)
 
-                # Diffuser les données via WebSocket
-                await websocket_broadcast(json.dumps(message_json))
-            except IntegrityError:
-                await db_session.rollback()
-                print("Erreur : Impossible d'ajouter les données.")
+            # Diffusion via WebSocket
+            await broadcast_to_websockets(json.dumps(message_json))
+            # Envoie au front-end
+
     except Exception as e:
         print(f"Erreur lors de la lecture des messages: {e}")
+

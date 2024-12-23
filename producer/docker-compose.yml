@@ -1,9 +1,9 @@
 services:
   producer:
     build:
-      context: ./producer
+      context: .
     env_file: 
       - .env  # Charge les variables depuis le fichier .env
     volumes:
-      - ./producer:/app
+      - .:/app
     restart: unless-stopped

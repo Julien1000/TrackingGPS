@@ -1,7 +1,8 @@
 import osmnx as ox
 import random
 import time
-from producer import create_producer, envoyer_message  # Importer depuis producer.py
+from producerFct import envoyer_message  # Importer depuis producer.py
+from datetime import datetime
 
 def interpolate_coordinates(start, end, steps):
     """Interpoler des points entre deux coordonnées (lat, lon)."""
@@ -46,7 +47,8 @@ def generate_route_points(producer, topic, user_id, lat, lon, delay=0.5, change_
                 message = {
                     "user_id": user_id,
                     "latitude": coord[0],
-                    "longitude": coord[1]
+                    "longitude": coord[1],
+                    "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 envoyer_message(producer, topic, message)
                 time.sleep(delay)
@@ -56,15 +58,3 @@ def generate_route_points(producer, topic, user_id, lat, lon, delay=0.5, change_
     except KeyboardInterrupt:
         print("Génération interrompue par l'utilisateur.")
 
-# Exemple d'utilisation
-if __name__ == "__main__":
-    kafka_topic = "coordinates"
-    user_id = "user_123"  # Identifiant de l'utilisateur
-    producer = create_producer()  # Appel à la fonction du fichier producer.py
-    
-    # Point de départ (latitude, longitude)
-    start_lat = 48.8566
-    start_lon = 2.3522
-    
-    # Générer et envoyer des points de route
-    generate_route_points(producer, kafka_topic, user_id, start_lat, start_lon, delay=1, change_direction_probability=0.1, steps_per_edge=10)
