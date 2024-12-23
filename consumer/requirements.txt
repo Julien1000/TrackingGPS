@@ -1,2 +1,6 @@
 kafka-python>=2.0.0
 python-dotenv==1.0.1
+fastapi
+uvicorn[standard]
+asyncpg
+sqlalchemy[asyncio]

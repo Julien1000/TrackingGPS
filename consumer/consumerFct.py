@@ -1,7 +1,20 @@
 from kafka import KafkaConsumer
-import os
 import json
+import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import insert
+from db.database2 import get_db
+from db.model2 import Base, User, Coord
+from db.schema import CoordBase, CoordResponse, CoordCreate
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.future import select
 
+
+# Configuration PostgreSQL
+DB_HOST = "localhost"
+DB_USER = "postgres"
+DB_PASSWORD = "password"
+DB_NAME = "gps_data"
 
 def create_consumer(topic_name, bootstrap_servers, group_id):
     """
@@ -18,7 +31,7 @@ def create_consumer(topic_name, bootstrap_servers, group_id):
             topic_name,
             bootstrap_servers=bootstrap_servers,
             group_id=group_id,
-            auto_offset_reset='earliest',  # Options: 'latest', 'earliest', 'none'
+            auto_offset_reset='latest',  # Options: 'latest', 'earliest', 'none'
             enable_auto_commit=True        # Commit automatique des offsets
         )
         print(f"Consumer connecté au topic: {topic_name}")
@@ -27,44 +40,49 @@ def create_consumer(topic_name, bootstrap_servers, group_id):
         print(f"Erreur lors de la création du consumer: {e}")
         return None
 
-def read_messages(consumer):
+async def read_messages(consumer, websocket_broadcast, db_session: AsyncSession):
     """
-    Lit les messages depuis un Kafka Consumer.
-
+    Lit les messages depuis Kafka, vérifie l'utilisateur, insère les coordonnées et diffuse via WebSocket.
     :param consumer: Instance de KafkaConsumer.
+    :param websocket_broadcast: Fonction pour diffuser les messages via WebSocket.
+    :param db_session: Instance de AsyncSession pour interagir avec la base.
     """
     try:
-        # Boucle pour lire les messages
         for message in consumer:
-            print(f"Message reçu: {message.value.decode('utf-8')} | Partition: {message.partition} | Offset: {message.offset}")
-
-
+            # Décoder et parser le message
             message_str = message.value.decode('utf-8')
             message_json = json.loads(message_str)
-            # Extraire les champs nécessaires
-            user_id = message_json.get('user_id')
+
+            nom = message_json.get('nom')
             latitude = message_json.get('latitude')
             longitude = message_json.get('longitude')
+            date1 = message_json.get('date1')  # Format de date inclus
 
-            # Ajout à la base de données
+            # Vérifiez si l'utilisateur existe
+            result = await db_session.execute(select(User).filter(User.nom == nom))
+            user = result.scalars().first()
+            if not user:
+                user = User(nom=nom)
+                db_session.add(user)
 
-            
-            # Envoie au front-end
+            # Ajouter les coordonnées
+            new_coord = Coord(
+                nom=nom,
+                latitude=latitude,
+                longitude=longitude,
+                date1=date1
+            )
+            db_session.add(new_coord)
 
+            try:
+                # Sauvegarder dans la base
+                await db_session.commit()
+                await db_session.refresh(new_coord)
+
+                # Diffuser les données via WebSocket
+                await websocket_broadcast(json.dumps(message_json))
+            except IntegrityError:
+                await db_session.rollback()
+                print("Erreur : Impossible d'ajouter les données.")
     except Exception as e:
         print(f"Erreur lors de la lecture des messages: {e}")
-
-# # Exemple d'utilisation
-# if __name__ == "__main__":
-#     # Paramètres
-#     TOPIC = "coordinates"
-#     broker = os.getenv('KAFKA_BROKER')
-#     BOOTSTRAP_SERVERS = broker  # Remplacez par l'adresse de votre broker
-#     GROUP_ID = "mon_groupe_consumer"
-
-#     # Création du consumer
-#     consumer = create_consumer(TOPIC, BOOTSTRAP_SERVERS, GROUP_ID)
-    
-#     if consumer:
-#         # Lecture des messages
-#         read_messages(consumer)

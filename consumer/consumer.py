@@ -7,7 +7,7 @@ if __name__ == "__main__":
     TOPIC = "coordinates"
     broker = os.getenv('KAFKA_BROKER')
     BOOTSTRAP_SERVERS = broker  # Remplacez par l'adresse de votre broker
-    GROUP_ID = "mon_groupe_consumer"
+    GROUP_ID = "gps-consumer-group"
 
     # Création du consumer
     consumer = create_consumer(TOPIC, BOOTSTRAP_SERVERS, GROUP_ID)
