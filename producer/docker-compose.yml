@@ -6,4 +6,10 @@ services:
       - .env  # Charge les variables depuis le fichier .env
     volumes:
       - .:/app
+    networks:
+      - brokerkafka_my_kafka_network
     restart: unless-stopped
+
+networks:
+  brokerkafka_my_kafka_network:
+    external: true  # <- on indique qu'il existe déjà, créé par l'autre compose

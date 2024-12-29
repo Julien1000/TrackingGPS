@@ -11,4 +11,4 @@ if __name__ == "__main__":
     start_lon = 2.3522
     
     # Générer et envoyer des points de route
-    generate_route_points(producer, kafka_topic, user_id, start_lat, start_lon, delay=1, change_direction_probability=0.1, steps_per_edge=10)
+    generate_route_points(producer, kafka_topic, user_id, start_lat, start_lon, delay=10, change_direction_probability=0.1, steps_per_edge=10)

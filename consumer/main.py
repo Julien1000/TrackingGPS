@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import text
 import os
 import asyncio
 
@@ -11,6 +12,8 @@ from db.database2 import get_db
 from db.model2 import Base, User, Coord
 from db.schema import CoordBase, CoordResponse, CoordCreate
 from db.database2 import async_session_maker
+
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -21,6 +24,20 @@ GROUP_ID = "gps-consumer-group"
 
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",  # Vite
+    "http://127.0.0.1:5173",  # Alternative localhost
+    # Add any other frontend URLs if needed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,        # or ["*"] to allow all
+    allow_credentials=True,
+    allow_methods=["*"],          # or specify ["GET", "POST", ...]
+    allow_headers=["*"],
+)
 
 websocket_clients = []
 @app.get("/")
@@ -126,6 +143,24 @@ async def broadcast_to_websockets(message):
     for client in disconnected_clients:
         websocket_clients.remove(client)
 
+@app.delete("/clear_db", status_code=204)
+async def clear_database(db: AsyncSession = Depends(get_db)):
+    """
+    Supprime toutes les données des tables 'coord' et 'user' en évitant les deadlocks.
+    """
+    try:
+        async with db.begin():  # Démarre une transaction explicite
+            # Supprime les données de 'coord' en premier pour éviter les conflits
+            await db.execute(text("TRUNCATE TABLE coord CASCADE"))
+            # Ensuite, supprime les données de 'user'
+            await db.execute(text("TRUNCATE TABLE \"user\" CASCADE"))
+        await db.commit()  # Valide les modifications
+        return {"message": "Toutes les données ont été supprimées avec succès."}
+    except Exception as e:
+        await db.rollback()  # Annule les modifications en cas d'erreur
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression : {str(e)}")
+
+
 # Route WebSocket
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -137,23 +172,24 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception:
         websocket_clients.remove(websocket)
 
+
+from consumerFct import create_consumer, read_messages
 # Lancer le consumer en arrière-plan
 @app.on_event("startup")
 async def startup_event():
-    from consumerFct import create_consumer, read_messages
-
     """
-    Fonction exécutée au démarrage de l'application.
-    Configure le consumer Kafka et lance la tâche d'écoute.
+    Au démarrage de FastAPI, on crée le consumer et on lance
+    une tâche asynchrone pour lire les messages.
     """
-    # Création du consumer Kafka
-    consumer = create_consumer(TOPIC, BOOTSTRAP_SERVERS, GROUP_ID)
-
-    # Lancer la lecture des messages si le consumer est valide
-    if consumer:
-        try:
-            asyncio.create_task(read_messages(consumer))
-        except Exception as e:
-            print(f"Erreur lors de la lecture des messages: {e}")
+    kafka_broker = os.getenv("KAFKA_BROKER", "kafka:9092")
+    consumer = create_consumer(
+        topic_name="coordinates", 
+        bootstrap_servers=[kafka_broker], 
+        group_id="my_consumer_group"
+    )
+    if consumer is not None:
+        # On lance la lecture de messages dans une task asynchrone
+        asyncio.create_task(read_messages(consumer))
     else:
-        print("Erreur : Impossible de créer le consumer Kafka.")
+        print("[main] Erreur : Impossible de créer le consumer Kafka.")
+
