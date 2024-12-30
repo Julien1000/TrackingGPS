@@ -28,7 +28,28 @@ This project is an application that simulates movement and tracks it in real-tim
 
 ---
 
-## **Setup and Usage**
+## **Configuration**
+
+### **Environment Files**  
+Each component (broker, producer, consumer) has its own `.env` file. Update the following fields in each file:  
+1. **Database configuration**: Specify the database credentials for the consumer,or leave the default values as they are.  
+2. **Kafka broker address**: Replace with your public IP address or `localhost`. You can find your public IP with:  
+   ```bash
+   ifconfig
+   ```
+
+### **Network Setup**  
+If you are running components on different machines:  
+- Ensure the Kafka broker is reachable over the network.  
+- Open port **9094** on the machine hosting Kafka.  
+
+### **Dependency Notes**  
+- The producer and consumer **must** connect to the Kafka broker to function.  
+- The broker, producer, and consumer can run on separate machines for flexibility.  
+
+---
+
+## **Setup**
 
 ### **1. Start the Kafka Broker**  
 The Kafka broker acts as the central hub for transferring data between components. Run the following command:  
@@ -58,25 +79,38 @@ docker compose -f consumer/docker-compose.yml up
 ```
 
 ---
+## **Usage Guide**
 
-## **Configuration**
+### **1. The Website Interface**
+- The **main website** is hosted on a front-end service built with Vue.js.
+- **Access it via**: [http://localhost:5173](http://localhost:5173)
+  - The site serves as the primary interface for interacting with the GPS coordinates management system.
 
-### **Environment Files**  
-Each component (broker, producer, consumer) has its own `.env` file. Update the following fields in each file:  
-1. **Database configuration**: Specify the database credentials for the consumer.  
-2. **Kafka broker address**: Replace with your public IP address or `localhost`. You can find your public IP with:  
-   ```bash
-   ifconfig
-   ```
 
-### **Network Setup**  
-If you are running components on different machines:  
-- Ensure the Kafka broker is reachable over the network.  
-- Open port **9094** on the machine hosting Kafka.  
+### **2. Backend API (FastAPI)**
+- The back-end API is powered by **FastAPI**, which handles business logic and communication with the database.
+- **Access it via**: [http://localhost:8000](http://localhost:8000)
+  - API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs) (Swagger UI).
 
-### **Dependency Notes**  
-- The producer and consumer **must** connect to the Kafka broker to function.  
-- The broker, producer, and consumer can run on separate machines for flexibility.  
+
+### **3. PostgreSQL Database**
+- A **PostgreSQL** instance stores the GPS coordinates and related data.
+- **Access it via**: 
+  - Command-line:  
+    ```bash
+    psql -h localhost -U ekip -d coord_gps
+    ```
+  - Port: **5432**
+
+
+### **4. Kafka and Kafka UI**
+- **Kafka** is used for event streaming and messaging.
+  - Ports:  
+    - Broker accessible at **localhost:9094**
+    - Internal listener for container communication at **localhost:9092**
+
+- **Kafka UI** provides a user-friendly interface to manage Kafka clusters.
+  - **Access it via**: [http://localhost:8080](http://localhost:8080)
 
 ---
 
@@ -85,3 +119,5 @@ If you are running components on different machines:
 1. **Producer**: Generates GPS data and sends it to Kafka.  
 2. **Broker**: Acts as a central hub to distribute data between producers and the consumer.  
 3. **Consumer**: Reads data from Kafka, stores it in the database, and updates the interactive map in real-time.  
+
+
