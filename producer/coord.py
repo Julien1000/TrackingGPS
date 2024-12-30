@@ -1,7 +1,7 @@
 import osmnx as ox
 import random
 import time
-from producerFct import envoyer_message  # Importer depuis producer.py
+from producerFct import envoyer_message  
 from datetime import datetime
 
 def interpolate_coordinates(start, end, steps):

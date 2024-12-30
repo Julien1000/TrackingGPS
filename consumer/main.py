@@ -24,11 +24,11 @@ GROUP_ID = "gps-consumer-group"
 
 
 app = FastAPI()
+consumer = None
 
 origins = [
     "http://localhost:5173",  # Vite
     "http://127.0.0.1:5173",  # Alternative localhost
-    # Add any other frontend URLs if needed
 ]
 
 app.add_middleware(
@@ -40,34 +40,6 @@ app.add_middleware(
 )
 
 websocket_clients = []
-# @app.get("/")
-# async def get():
-#     html = """
-#     <!DOCTYPE html>
-#     <html>
-#     <head>
-#         <title>GPS Tracker</title>
-#     </head>
-#     <body>
-#         <h1>Real-Time GPS Tracker</h1>
-#         <div id="output"></div>
-#         <script>
-#             const ws = new WebSocket("ws://localhost:8000/ws");
-#             ws.onmessage = function(event) {
-#                 const data = JSON.parse(event.data);
-#                 const output = document.getElementById("output");
-#                 const div = document.createElement("div");
-#                 div.textContent = `nom: ${data.nom}, Latitude: ${data.latitude}, Longitude: ${data.longitude}`;
-#                 output.appendChild(div);
-#             };
-#         </script>
-#     </body>
-#     </html>
-#     """
-#     return HTMLResponse(html)
-
-
-
 
 # Route pour récupérer toutes les coordonnées
 @app.get("/coords", response_model=List[CoordResponse])
@@ -195,4 +167,16 @@ async def startup_event():
             print(f"[main] Erreur lors de la création de la tâche asynchrone: {e}")
     else:
         print("[main] Erreur : Impossible de créer le consumer Kafka.")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Arrête proprement le consommateur Kafka lors de l'arrêt de l'application.
+    """
+    try:
+        if consumer is not None:
+            consumer.close()
+            print("Consumer Kafka fermé correctement.")
+    except Exception as e:
+        print(f"Erreur lors de la fermeture du consumer Kafka: {e}")
 
