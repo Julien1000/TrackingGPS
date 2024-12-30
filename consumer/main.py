@@ -24,6 +24,7 @@ GROUP_ID = "gps-consumer-group"
 
 
 app = FastAPI()
+consumer = None
 
 origins = [
     "http://localhost:5173",  # Vite
@@ -195,4 +196,16 @@ async def startup_event():
             print(f"[main] Erreur lors de la création de la tâche asynchrone: {e}")
     else:
         print("[main] Erreur : Impossible de créer le consumer Kafka.")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Arrête proprement le consommateur Kafka lors de l'arrêt de l'application.
+    """
+    try:
+        if consumer is not None:
+            consumer.close()
+            print("Consumer Kafka fermé correctement.")
+    except Exception as e:
+        print(f"Erreur lors de la fermeture du consumer Kafka: {e}")
 
