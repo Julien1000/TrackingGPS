@@ -31,6 +31,19 @@ services:
       - app_network
     restart: always
 
+  front:
+    build:
+      context: ./front     # Dockerfile situé dans consumer/front/
+    container_name: vue
+    depends_on:
+      - fastapi
+    ports:
+      - "5173:5173"       # maps localhost:5173 => container:5173
+    networks:
+      - brokerkafka_my_kafka_network
+    restart: always
+
+
 volumes:
   postgres_data:
 
