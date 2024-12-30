@@ -17,4 +17,3 @@ COPY . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
-## TODO Tester sur un nouveau projet si la map marche bien, la ya moy elle marche juste parce que c'est deja installé

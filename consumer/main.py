@@ -29,7 +29,6 @@ consumer = None
 origins = [
     "http://localhost:5173",  # Vite
     "http://127.0.0.1:5173",  # Alternative localhost
-    # Add any other frontend URLs if needed
 ]
 
 app.add_middleware(
@@ -41,34 +40,6 @@ app.add_middleware(
 )
 
 websocket_clients = []
-# @app.get("/")
-# async def get():
-#     html = """
-#     <!DOCTYPE html>
-#     <html>
-#     <head>
-#         <title>GPS Tracker</title>
-#     </head>
-#     <body>
-#         <h1>Real-Time GPS Tracker</h1>
-#         <div id="output"></div>
-#         <script>
-#             const ws = new WebSocket("ws://localhost:8000/ws");
-#             ws.onmessage = function(event) {
-#                 const data = JSON.parse(event.data);
-#                 const output = document.getElementById("output");
-#                 const div = document.createElement("div");
-#                 div.textContent = `nom: ${data.nom}, Latitude: ${data.latitude}, Longitude: ${data.longitude}`;
-#                 output.appendChild(div);
-#             };
-#         </script>
-#     </body>
-#     </html>
-#     """
-#     return HTMLResponse(html)
-
-
-
 
 # Route pour récupérer toutes les coordonnées
 @app.get("/coords", response_model=List[CoordResponse])

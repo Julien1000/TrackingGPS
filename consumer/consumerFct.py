@@ -52,7 +52,7 @@ async def read_messages(consumer):
                         date = message_json.get('date')
 
                         message_json = {
-                            "nom": user_id,  # Associez "user_id" à "nom" attendu par CoordCreate
+                            "nom": user_id,  
                             "latitude": latitude,
                             "longitude": longitude,
                             "date1": date  # Date au format ISO 8601

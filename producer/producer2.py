@@ -7,8 +7,8 @@ if __name__ == "__main__":
     producer = create_producer()  # Appel à la fonction du fichier producer.py
     
     # Point de départ (latitude, longitude)
-    start_lat = 43.2965  # Latitude de Marseille
-    start_lon = 5.3698   # Longitude de Marseille
+    start_lat = 43.2965 
+    start_lon = 5.3698   
 
     
     # Générer et envoyer des points de route
