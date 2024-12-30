@@ -33,38 +33,38 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,        # or ["*"] to allow all
+    allow_origins=["*"],  # Remplace par les domaines autorisés
     allow_credentials=True,
-    allow_methods=["*"],          # or specify ["GET", "POST", ...]
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 websocket_clients = []
-@app.get("/")
-async def get():
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>GPS Tracker</title>
-    </head>
-    <body>
-        <h1>Real-Time GPS Tracker</h1>
-        <div id="output"></div>
-        <script>
-            const ws = new WebSocket("ws://localhost:8000/ws");
-            ws.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                const output = document.getElementById("output");
-                const div = document.createElement("div");
-                div.textContent = `nom: ${data.nom}, Latitude: ${data.latitude}, Longitude: ${data.longitude}`;
-                output.appendChild(div);
-            };
-        </script>
-    </body>
-    </html>
-    """
-    return HTMLResponse(html)
+# @app.get("/")
+# async def get():
+#     html = """
+#     <!DOCTYPE html>
+#     <html>
+#     <head>
+#         <title>GPS Tracker</title>
+#     </head>
+#     <body>
+#         <h1>Real-Time GPS Tracker</h1>
+#         <div id="output"></div>
+#         <script>
+#             const ws = new WebSocket("ws://localhost:8000/ws");
+#             ws.onmessage = function(event) {
+#                 const data = JSON.parse(event.data);
+#                 const output = document.getElementById("output");
+#                 const div = document.createElement("div");
+#                 div.textContent = `nom: ${data.nom}, Latitude: ${data.latitude}, Longitude: ${data.longitude}`;
+#                 output.appendChild(div);
+#             };
+#         </script>
+#     </body>
+#     </html>
+#     """
+#     return HTMLResponse(html)
 
 
 
@@ -181,7 +181,7 @@ async def startup_event():
     Au démarrage de FastAPI, on crée le consumer et on lance
     une tâche asynchrone pour lire les messages.
     """
-    kafka_broker = os.getenv("KAFKA_BROKER", "kafka:9092")
+    kafka_broker = os.getenv("KAFKA_BROKER")
     consumer = create_consumer(
         topic_name="coordinates", 
         bootstrap_servers=[kafka_broker], 
@@ -189,7 +189,10 @@ async def startup_event():
     )
     if consumer is not None:
         # On lance la lecture de messages dans une task asynchrone
-        asyncio.create_task(read_messages(consumer))
+        try:
+            asyncio.create_task(read_messages(consumer))
+        except Exception as e:
+            print(f"[main] Erreur lors de la création de la tâche asynchrone: {e}")
     else:
         print("[main] Erreur : Impossible de créer le consumer Kafka.")
 

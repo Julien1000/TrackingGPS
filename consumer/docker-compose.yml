@@ -40,7 +40,7 @@ services:
     ports:
       - "5173:5173"       # maps localhost:5173 => container:5173
     networks:
-      - brokerkafka_my_kafka_network
+      - app_network
     restart: always
 
 

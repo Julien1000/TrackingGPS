@@ -16,6 +16,7 @@ export default {
   data() {
     return {
       coords: [], // tableau vide au départ
+      buffer: [], // Buffer pour regrouper les updates
     }
   },
   mounted() {
@@ -32,21 +33,31 @@ export default {
     // 2) Ouvrir la WebSocket
     this.ws = new WebSocket('ws://localhost:8000/ws')
     this.ws.onmessage = (event) => {
-      // 3) À chaque message, on parse et on ajoute au tableau
+      // 3) À chaque message, on parse et on ajoute au buffer
       try {
         const newCoord = JSON.parse(event.data)
-        // On suppose que le message ressemble à :
-        // { nom, latitude, longitude, date1, etc. }
-        this.coords.push(newCoord)
+        this.buffer.push(newCoord)
       } catch (err) {
         console.error('Erreur de parsing message WebSocket:', err)
       }
     }
+
+    // 4) Regrouper les mises à jour toutes les 500ms
+    this.updateInterval = setInterval(() => {
+      if (this.buffer.length > 0) {
+        this.coords = [...this.coords, ...this.buffer] // Forcer la réactivité
+        this.buffer = [] // Réinitialiser le buffer
+      }
+    }, 500)
   },
   beforeUnmount() {
-    // Fermer la WS proprement
+    // Fermer la WebSocket proprement
     if (this.ws) {
       this.ws.close()
+    }
+    // Nettoyer l'intervalle
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval)
     }
   },
 }

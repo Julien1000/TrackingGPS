@@ -1,7 +1,18 @@
 services:
-  producer:
+  producer_1:
     build:
       context: .
+      dockerfile: Dockerfile.producer1  # Utilise un Dockerfile spécifique
+    env_file: 
+      - .env  # Charge les variables depuis le fichier .env
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  producer_2:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer2  # Utilise un autre Dockerfile spécifique
     env_file: 
       - .env  # Charge les variables depuis le fichier .env
     volumes:

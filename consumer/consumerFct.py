@@ -33,6 +33,8 @@ async def read_messages(consumer):
     """
     try:
         # Boucle pour lire les messages
+        print("TESSSSSSSSSSSSSSSSSSSSSSSSSSSST", flush=True)
+
         for message in consumer:
             print(f"Message reçu: {message.value.decode('utf-8')} | Partition: {message.partition} | Offset: {message.offset}")
 
@@ -52,13 +54,16 @@ async def read_messages(consumer):
                 "longitude": longitude,
                 "date1": date  # Date au format ISO 8601
             }
+            print("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON")
+            print(f"Message JSON: {message_json}") 
+            print("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON")
 
-            # Ajout à la base de données
-            await add_coord_internally(message_json)
+            # # Ajout à la base de données
+            # await add_coord_internally(message_json)
 
-            # Diffusion via WebSocket
-            await broadcast_to_websockets(json.dumps(message_json))
-            # Envoie au front-end
+            # # Diffusion via WebSocket
+            # await broadcast_to_websockets(json.dumps(message_json))
+            # # Envoie au front-end
 
     except Exception as e:
         print(f"Erreur lors de la lecture des messages: {e}")

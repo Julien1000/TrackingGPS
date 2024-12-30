@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Commande par défaut pour exécuter le script en continu
-CMD ["python", "producer.py"]
+CMD ["python", "producer2.py"]
