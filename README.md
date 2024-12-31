@@ -61,11 +61,11 @@ docker compose -f brokerKafka/docker-compose.yml up
 Producers generate GPS data and send it to the Kafka broker. You can launch one or both producers:  
 - To start only `producer1`:  
   ```bash
-  docker compose -f producer/docker-compose.yml up producer1
+  docker compose -f producer/docker-compose.yml up producer_1
   ```  
 - To start only `producer2`:  
   ```bash
-  docker compose -f producer/docker-compose.yml up producer2
+  docker compose -f producer/docker-compose.yml up producer_2
   ```  
 - To start both producers:  
   ```bash
