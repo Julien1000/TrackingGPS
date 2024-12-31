@@ -33,7 +33,7 @@ This project is an application that simulates movement and tracks it in real-tim
 ### **Environment Files**  
 Each component (broker, producer, consumer) has its own `.env` file. Update the following fields in each file:  
 1. **Database configuration**: Specify the database credentials for the consumer,or leave the default values as they are.  
-2. **Kafka broker address**: Replace with your IP address or `localhost`. You can find your public IP with:  
+2. **Kafka broker address**: Replace with your IP address or `localhost`. You can find your IP with:  
    ```bash
    ifconfig
    ```
